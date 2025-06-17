@@ -36,6 +36,6 @@ class EntityToolResponse:
 
 
 @dataclass
-class CreateQueryResponse:
+class ComposeQueryResponse:
     sql: str | None = None
     error: None = None

@@ -1,5 +1,7 @@
 <instructions>
-Queries the dbt Semantic Layer to answer business questions from the data warehouse.
+ONLY USE THIS TOOL WHEN DRAFTING, CREATING, or UPDATING QUERIES.
+
+Compose queries to answer business questions from the data warehouse.
 
 This tool allows ordering and grouping by dimensions and entities.
 To use this tool, you must first know about specific metrics, dimensions and

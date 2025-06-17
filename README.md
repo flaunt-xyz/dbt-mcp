@@ -166,7 +166,7 @@ VS Code MCP docs [here](https://code.visualstudio.com/docs/copilot/chat/mcp-serv
 * `list_metrics` - Retrieves all defined metrics
 * `get_dimensions` - Gets dimensions associated with specified metrics
 * `get_entities` - Gets entities associated with specified metrics
-* `create_query` - Creates the raw SQL required for data source query 
+* `compose_query` - Returns raw SQL required for data source query 
 
 ### Discovery
 * `get_mart_models` - Gets all mart models

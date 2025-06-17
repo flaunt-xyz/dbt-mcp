@@ -9,7 +9,7 @@ from dbt_mcp.semantic_layer.gql.gql import GRAPHQL_QUERIES
 from dbt_mcp.semantic_layer.gql.gql_request import ConnAttr, submit_request
 from dbt_mcp.semantic_layer.levenshtein import get_misspellings
 from dbt_mcp.semantic_layer.types import (
-    CreateQueryResponse,
+    ComposeQueryResponse,
     DimensionToolResponse,
     EntityToolResponse,
     MetricToolResponse,
@@ -101,7 +101,7 @@ class SemanticLayerFetcher:
             self.entities_cache[metrics_key] = entities
         return self.entities_cache[metrics_key]
 
-    def validate_create_query_params(
+    def validate_compose_query_params(
         self, metrics: list[str], group_by: list[GroupByParam] | None
     ) -> str | None:
         errors = []
@@ -149,20 +149,20 @@ class SemanticLayerFetcher:
             return f"Errors: {', '.join(errors)}"
         return None
 
-    def create_query(
+    def compose_query(
         self,
         metrics: list[str],
         group_by: list[GroupByParam] | None = None,
         order_by: list[OrderByParam] | None = None,
         where: str | None = None,
         limit: int | None = None,
-    ) -> CreateQueryResponse:
-        validation_error = self.validate_create_query_params(
+    ) -> ComposeQueryResponse:
+        validation_error = self.validate_compose_query_params(
             metrics=metrics,
             group_by=group_by,
         )
         if validation_error:
-            return CreateQueryResponse(error=validation_error)
+            return ComposeQueryResponse(error=validation_error)
 
         try:
             query_error = None
@@ -195,10 +195,10 @@ class SemanticLayerFetcher:
                     error_msg = query_error.errors[0].get("message")
                     msg = str(error_msg)
                 
-                return CreateQueryResponse(error=msg)
-            return CreateQueryResponse(sql=created_query)
+                return ComposeQueryResponse(error=msg)
+            return ComposeQueryResponse(sql=created_query)
         except Exception as e:
-            return CreateQueryResponse(error=str(e))
+            return ComposeQueryResponse(error=str(e))
 
 
 def get_semantic_layer_fetcher(config: SemanticLayerConfig) -> SemanticLayerFetcher:

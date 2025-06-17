@@ -20,9 +20,9 @@ def test_semantic_layer_list_dimensions():
     assert len(dimensions) > 0
 
 
-def test_semantic_layer_create_query():
+def test_semantic_layer_compose_query():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.create_query(
+    result = semantic_layer_fetcher.compose_query(
         metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
@@ -36,9 +36,9 @@ def test_semantic_layer_create_query():
     assert result.error is None
 
 
-def test_semantic_layer_create_query_complex():
+def test_semantic_layer_compose_query_complex():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.create_query(
+    result = semantic_layer_fetcher.compose_query(
         metrics=["avg_conversion_rate"],
         group_by=[
             GroupByParam(
@@ -68,9 +68,9 @@ def test_semantic_layer_create_query_complex():
     assert result.error is None
 
 
-def test_semantic_layer_create_query_with_group_by_grain():
+def test_semantic_layer_compose_query_with_group_by_grain():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.create_query(
+    result = semantic_layer_fetcher.compose_query(
         metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
@@ -90,9 +90,9 @@ def test_semantic_layer_create_query_with_group_by_grain():
         assert result.error is None
 
 
-def test_semantic_layer_create_query_with_order_by():
+def test_semantic_layer_compose_query_with_order_by():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.create_query(
+    result = semantic_layer_fetcher.compose_query(
         metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
@@ -113,9 +113,9 @@ def test_semantic_layer_create_query_with_order_by():
         assert result.error is None
 
 
-def test_semantic_layer_create_query_with_misspellings():
+def test_semantic_layer_compose_query_with_misspellings():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.create_query(["avg_click_ratee"])
+    result = semantic_layer_fetcher.compose_query(["avg_click_ratee"])
     assert hasattr(result, 'error')
     assert result.error is not None
     assert "avg_click_rate" in result.error

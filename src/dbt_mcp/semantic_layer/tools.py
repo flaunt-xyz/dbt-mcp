@@ -11,7 +11,7 @@ from dbt_mcp.semantic_layer.types import (
     EntityToolResponse,
     MetricToolResponse,
     OrderByParam,
-    CreateQueryResult,
+    ComposeQueryResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,15 +32,15 @@ def register_sl_tools(dbt_mcp: FastMCP, config: SemanticLayerConfig) -> None:
     def get_entities(metrics: list[str]) -> list[EntityToolResponse] | str:
         return semantic_layer_fetcher.get_entities(metrics=metrics)
 
-    @dbt_mcp.tool(description=get_prompt("semantic_layer/create_query"))
-    def create_query(
+    @dbt_mcp.tool(description=get_prompt("semantic_layer/compose_query"))
+    def compose_query(
         metrics: list[str],
         group_by: list[GroupByParam] | None = None,
         order_by: list[OrderByParam] | None = None,
         where: str | None = None,
         limit: int | None = None,
-    ) -> CreateQueryResult:
-        return semantic_layer_fetcher.create_query(
+    ) -> ComposeQueryResponse:
+        return semantic_layer_fetcher.compose_query(
             metrics=metrics,
             group_by=group_by,
             order_by=order_by,
