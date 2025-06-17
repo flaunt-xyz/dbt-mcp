@@ -2,7 +2,6 @@ from functools import cache
 
 from dbtsl.api.shared.query_params import GroupByParam, OrderByGroupBy
 from dbtsl.client.sync import SyncSemanticLayerClient
-from dbtsl.error import QueryFailedError
 
 from dbt_mcp.config.config import SemanticLayerConfig
 from dbt_mcp.semantic_layer.gql.gql import GRAPHQL_QUERIES

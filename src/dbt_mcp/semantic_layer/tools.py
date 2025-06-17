@@ -7,7 +7,6 @@ from dbt_mcp.config.config import SemanticLayerConfig
 from dbt_mcp.prompts.prompts import get_prompt
 from dbt_mcp.semantic_layer.client import get_semantic_layer_fetcher
 from dbt_mcp.semantic_layer.types import (
-    CreateQueryError,
     DimensionToolResponse,
     EntityToolResponse,
     MetricToolResponse,
