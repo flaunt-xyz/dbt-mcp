@@ -36,15 +36,6 @@ class EntityToolResponse:
 
 
 @dataclass
-class CreateQueryResult:
-    sql: str
+class CreateQueryResponse:
+    sql: str | None = None
     error: None = None
-
-
-@dataclass
-class CreateQueryError:
-    error: str
-    sql: None = None
-
-
-CreateQueryResult= CreateQueryResult | CreateQueryError 

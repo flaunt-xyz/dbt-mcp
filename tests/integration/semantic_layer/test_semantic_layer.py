@@ -20,10 +20,10 @@ def test_semantic_layer_list_dimensions():
     assert len(dimensions) > 0
 
 
-def test_semantic_layer_query_metrics():
+def test_semantic_layer_create_query():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.query_metrics(
-        metrics=["revenue"],
+    result = semantic_layer_fetcher.create_query(
+        metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
                 name="metric_time",
@@ -32,17 +32,18 @@ def test_semantic_layer_query_metrics():
             )
         ],
     )
-    assert result is not None
+    assert result.sql is not None
+    assert result.error is None
 
 
-def test_semantic_layer_query_metrics_invalid_query():
+def test_semantic_layer_create_query_complex():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.query_metrics(
-        metrics=["food_revenue"],
+    result = semantic_layer_fetcher.create_query(
+        metrics=["avg_conversion_rate"],
         group_by=[
             GroupByParam(
-                name="order_id__location__location_name",
-                type=GroupByType.CATEGORICAL_DIMENSION,
+                name="campaign__campaign_name",
+                type=GroupByType.DIMENSION,
                 grain=None,
             ),
             GroupByParam(
@@ -57,19 +58,20 @@ def test_semantic_layer_query_metrics_invalid_query():
                 descending=True,
             ),
             OrderByParam(
-                name="food_revenue",
+                name="campaign__campaign_name",
                 descending=True,
             ),
         ],
         limit=5,
     )
-    assert result is not None
+    assert result.sql is not None
+    assert result.error is None
 
 
-def test_semantic_layer_query_metrics_with_group_by_grain():
+def test_semantic_layer_create_query_with_group_by_grain():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.query_metrics(
-        metrics=["revenue"],
+    result = semantic_layer_fetcher.create_query(
+        metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
                 name="metric_time",
@@ -78,13 +80,20 @@ def test_semantic_layer_query_metrics_with_group_by_grain():
             )
         ],
     )
-    assert result is not None
+    if isinstance(result, dict):
+        assert "sql" in result
+        assert result["sql"] is not None
+        assert result["error"] is None
+    else:
+        assert hasattr(result, 'sql')
+        assert result.sql is not None
+        assert result.error is None
 
 
-def test_semantic_layer_query_metrics_with_order_by():
+def test_semantic_layer_create_query_with_order_by():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.query_metrics(
-        metrics=["revenue"],
+    result = semantic_layer_fetcher.create_query(
+        metrics=["avg_click_rate"],
         group_by=[
             GroupByParam(
                 name="metric_time",
@@ -94,19 +103,27 @@ def test_semantic_layer_query_metrics_with_order_by():
         ],
         order_by=[OrderByParam(name="metric_time", descending=True)],
     )
-    assert result is not None
+    if isinstance(result, dict):
+        assert "sql" in result
+        assert result["sql"] is not None
+        assert result["error"] is None
+    else:
+        assert hasattr(result, 'sql')
+        assert result.sql is not None
+        assert result.error is None
 
 
-def test_semantic_layer_query_metrics_with_misspellings():
+def test_semantic_layer_create_query_with_misspellings():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
-    result = semantic_layer_fetcher.query_metrics(["revehue"])
-    assert result is not None
-    assert "revenue" in result
+    result = semantic_layer_fetcher.create_query(["avg_click_ratee"])
+    assert hasattr(result, 'error')
+    assert result.error is not None
+    assert "avg_click_rate" in result.error
 
 
 def test_semantic_layer_get_entities():
     semantic_layer_fetcher = get_semantic_layer_fetcher(config.semantic_layer_config)
     entities = semantic_layer_fetcher.get_entities(
-        metrics=["count_dbt_copilot_requests"]
+        metrics=["avg_click_rate"]
     )
     assert len(entities) > 0
