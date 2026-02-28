@@ -36,15 +36,6 @@ class EntityToolResponse:
 
 
 @dataclass
-class QueryMetricsSuccess:
-    result: str
+class ComposeQueryResponse:
+    sql: str | None = None
     error: None = None
-
-
-@dataclass
-class QueryMetricsError:
-    error: str
-    result: None = None
-
-
-QueryMetricsResult = QueryMetricsSuccess | QueryMetricsError

@@ -2,20 +2,18 @@ from functools import cache
 
 from dbtsl.api.shared.query_params import GroupByParam, OrderByGroupBy
 from dbtsl.client.sync import SyncSemanticLayerClient
-from dbtsl.error import QueryFailedError
+from gql.transport.exceptions import TransportQueryError
 
 from dbt_mcp.config.config import SemanticLayerConfig
 from dbt_mcp.semantic_layer.gql.gql import GRAPHQL_QUERIES
 from dbt_mcp.semantic_layer.gql.gql_request import ConnAttr, submit_request
 from dbt_mcp.semantic_layer.levenshtein import get_misspellings
 from dbt_mcp.semantic_layer.types import (
+    ComposeQueryResponse,
     DimensionToolResponse,
     EntityToolResponse,
     MetricToolResponse,
     OrderByParam,
-    QueryMetricsError,
-    QueryMetricsResult,
-    QueryMetricsSuccess,
 )
 
 
@@ -103,7 +101,7 @@ class SemanticLayerFetcher:
             self.entities_cache[metrics_key] = entities
         return self.entities_cache[metrics_key]
 
-    def validate_query_metrics_params(
+    def validate_compose_query_params(
         self, metrics: list[str], group_by: list[GroupByParam] | None
     ) -> str | None:
         errors = []
@@ -114,15 +112,18 @@ class SemanticLayerFetcher:
             top_k=5,
         )
         for metric_misspelling in metric_misspellings:
-            recommendations = (
-                " Did you mean: " + ", ".join(metric_misspelling.similar_words) + "?"
-            )
-            errors.append(
-                f"Metric {metric_misspelling.word} not found." + recommendations
-                if metric_misspelling.similar_words
-                else ""
-            )
-
+            if metric_misspelling.similar_words:
+                recommendations = (
+                    " Did you mean: " + ", ".join(metric_misspelling.similar_words) + "?"
+                )
+                errors.append(
+                    f"Metric {metric_misspelling.word} not found." + recommendations
+                    if metric_misspelling.similar_words
+                    else ""
+                )
+            else:
+                errors.append(f"Metric {metric_misspelling.word} not found.")
+        
         if errors:
             return f"Errors: {', '.join(errors)}"
 
@@ -133,65 +134,44 @@ class SemanticLayerFetcher:
             top_k=5,
         )
         for dimension_misspelling in dimension_misspellings:
-            recommendations = (
-                " Did you mean: " + ", ".join(dimension_misspelling.similar_words) + "?"
-            )
-            errors.append(
-                f"Dimension {dimension_misspelling.word} not found." + recommendations
-                if dimension_misspelling.similar_words
-                else ""
-            )
-
+            if dimension_misspelling.similar_words:
+                recommendations = (
+                    " Did you mean: " + ", ".join(dimension_misspelling.similar_words) + "?"
+                )
+                errors.append(
+                    f"Dimension {dimension_misspelling.word} not found." + recommendations
+                    if dimension_misspelling.similar_words
+                    else ""
+                )
+            else:
+                errors.append(f"Dimension {dimension_misspelling.word} not found.")
         if errors:
             return f"Errors: {', '.join(errors)}"
         return None
 
-    # TODO: move this to the SDK
-    def _format_query_failed_error(self, query_error: Exception) -> QueryMetricsError:
-        if isinstance(query_error, QueryFailedError):
-            return QueryMetricsError(
-                error=str(query_error)
-                .replace("QueryFailedError(", "")
-                .rstrip(")")
-                .lstrip("[")
-                .rstrip("]")
-                .lstrip('"')
-                .rstrip('"')
-                .replace("INVALID_ARGUMENT: [FlightSQL]", "")
-                .replace("(InvalidArgument; Prepare)", "")
-                .replace("(InvalidArgument; ExecuteQuery)", "")
-                .replace("Failed to prepare statement:", "")
-                .replace(
-                    "com.dbt.semanticlayer.exceptions.DataPlatformException:",
-                    "",
-                )
-                .strip()
-            )
-        else:
-            return QueryMetricsError(error=str(query_error))
-
-    def query_metrics(
+    def compose_query(
         self,
         metrics: list[str],
         group_by: list[GroupByParam] | None = None,
         order_by: list[OrderByParam] | None = None,
         where: str | None = None,
         limit: int | None = None,
-    ) -> QueryMetricsResult:
-        validation_error = self.validate_query_metrics_params(
+    ) -> ComposeQueryResponse:
+        validation_error = self.validate_compose_query_params(
             metrics=metrics,
             group_by=group_by,
         )
         if validation_error:
-            return QueryMetricsError(error=validation_error)
+            return ComposeQueryResponse(error=validation_error)
 
         try:
             query_error = None
+            created_query = None
             with self.sl_client.session():
                 # Catching any exception within the session
                 # to ensure it is closed properly
                 try:
-                    query_result = self.sl_client.query(
+                    created_query = self.sl_client.compile_sql(
                         metrics=metrics,
                         # TODO: remove this type ignore once this PR is merged: https://github.com/dbt-labs/semantic-layer-sdk-python/pull/80
                         group_by=group_by,  # type: ignore
@@ -209,11 +189,16 @@ class SemanticLayerFetcher:
                 except Exception as e:
                     query_error = e
             if query_error:
-                return self._format_query_failed_error(query_error)
-            json_result = query_result.to_pandas().to_json(orient="records", indent=2)
-            return QueryMetricsSuccess(result=json_result)
+                msg = str(query_error)
+               
+                if isinstance(query_error, TransportQueryError):
+                    error_msg = query_error.errors[0].get("message")
+                    msg = str(error_msg)
+                
+                return ComposeQueryResponse(error=msg)
+            return ComposeQueryResponse(sql=created_query)
         except Exception as e:
-            return self._format_query_failed_error(e)
+            return ComposeQueryResponse(error=str(e))
 
 
 def get_semantic_layer_fetcher(config: SemanticLayerConfig) -> SemanticLayerFetcher:

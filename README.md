@@ -11,6 +11,25 @@ This MCP (Model Context Protocol) server provides tools to interact with dbt. Re
 1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 2. Copy the [`.env.example` file](https://github.com/dbt-labs/dbt-mcp/blob/main/.env.example) locally under a file called `.env` and set it with your specific environment variables (see the `Configuration` section of the `README.md`)
 
+## Running Locally
+
+Ensure the following are populated 
+```
+DBT_HOST=xxx.xxx.com
+DBT_PROD_ENV_ID=xxxxxxxxx
+DBT_TOKEN=xxxxxxxxxxx
+DISABLE_DBT_CLI=true
+DISABLE_DISCOVERY=true
+DISABLE_REMOTE=true	
+MULTICELL_ACCOUNT_PREFIX=xxxxx
+```
+
+
+Start the server with `transport="sse"` (ensure `.run(transport="sse")` in `main.py`)
+```
+uv run dbt-mcp
+```
+
 ## Configuration
 
 The MCP server takes the following environment variable configuration:
@@ -147,8 +166,7 @@ VS Code MCP docs [here](https://code.visualstudio.com/docs/copilot/chat/mcp-serv
 * `list_metrics` - Retrieves all defined metrics
 * `get_dimensions` - Gets dimensions associated with specified metrics
 * `get_entities` - Gets entities associated with specified metrics
-* `query_metrics` - Queries metrics with optional grouping, ordering, filtering, and limiting
-
+* `compose_query` - Returns raw SQL required for data source query 
 
 ### Discovery
 * `get_mart_models` - Gets all mart models
